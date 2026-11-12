@@ -381,7 +381,7 @@ def parse_int(str, min, max, description):
 
 
 def is_privilege_excp(excp):
-	return errno.EPERM == excp.errno
+	return errno.EPERM == getattr(excp, 'errno', None)
 
 def check_privilege(excp):
 	if is_privilege_excp(excp):
@@ -423,18 +423,21 @@ if options.cable_len:
 		ctrl.set_ieee_pfc(_pfc_en = pfc_en, _delay = pfc_delay)
 	except OSError as e:
 		check_privilege(e)
-		print('mlnx_qos: Error setting pfc delay:' + e)
+		print('mlnx_qos: Error setting pfc delay: ' + str(e))
 		sys.exit(1)
 
 if options.get_pfc:
-	pfc_en = ctrl.get_ieee_pfc_en()
-	pfc_en = list(bin(pfc_en)[2:].zfill(8))[::-1] # Convert integer to binary string
-	index = int(options.get_pfc)
+	try:
+		index = int(options.get_pfc)
+	except ValueError:
+		index = -1
 
 	if index not in range(0,8):
 		print("pfc index must be in range of 0-7")
 		sys.exit(1)
 
+	pfc_en = ctrl.get_ieee_pfc_en()
+	pfc_en = list(bin(pfc_en)[2:].zfill(8))[::-1] # Convert integer to binary string
 	print(pfc_en[index])
 	exit(0)
 
@@ -463,7 +466,7 @@ if options.specific_pfc:
 		ctrl.set_ieee_pfc(_pfc_en = pfc_en, _delay = pfc_delay)
 	except OSError as e:
 		check_privilege(e)
-		print('mlnx_qos: Error setting pfc:' + e)
+		print('mlnx_qos: Error setting pfc: ' + str(e))
 		sys.exit(1)
 	exit(0)
 
@@ -489,7 +492,7 @@ if options.pfc:
 		ctrl.set_ieee_pfc(_pfc_en = pfc_en, _delay = pfc_delay)
 	except OSError as e:
 		check_privilege(e)
-		print('mlnx_qos: Error setting pfc:' + e)
+		print('mlnx_qos: Error setting pfc: ' + str(e))
 		sys.exit(1)
 
 # ********* dscp2prio command ******************************
